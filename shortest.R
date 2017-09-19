@@ -1,16 +1,16 @@
 bestDM = function(roads, car, packages){
   if(car$load == 0){
-#    togo = selectPackage(roads, car, packages)
-    togo = which(packages[,5] == 0)[1]
+    togo = selectPackage(roads, car, packages)
+#    togo = which(packages[,5] == 0)[1]
     orig = list(x = car$x, y = car$y)
     dest = list(x = packages[togo, 1], y = packages[togo, 2])
-    dir = astar(orig, dest, roads)$dir
+    dir = astar(orig, dest, roads)
     car$nextMove = dir
     return (car)
   } else {
     orig = list(x = car$x, y = car$y)
     dest = list(x = packages[car$load, 3], y = packages[car$load, 4])
-    dir = astar(orig, dest, roads)$dir
+    dir = astar(orig, dest, roads)
     car$nextMove = dir
     return(car)
   }
@@ -19,12 +19,51 @@ bestDM = function(roads, car, packages){
 selectPackage=function(roads,car,packages){
   availablePackagesnr = which(packages[,5] == 0)
   availablePackages = list()
-  for (x in availablePackagesnr){
-    availablePackages[[i]] = list(nr = x, x1 = packages[x, 1], y1 = packages[x, 2], x2 = packages[x, 3], y2 = packages[x, 4], cost = mDist(list(x = x1, y = y1), list(x = x2, y = y2)))
+  curr = list(end = list(x = car$x, y = car$y), dist = 0, prev = NULL)
+  for (i in seq(1,length(availablePackagesnr))){
+    availablePackages[[i]] = list(nr = availablePackagesnr[i], start = list(x = packages[i, 1], y = packages[i, 2]), end = list(x = packages[i, 3], y = packages[i, 4]), dist = 0, prev = NULL)
   }
+  ends = pathcosts(curr, availablePackages, list(), astardist, roads)
+  end
+  min = 100000
+  for (thing in ends){
+    if (thing$dist < min){
+      end = thing
+      min = thing$dist
+    }
+  }
+  while(!is.null(end$prev$prev)){
+    end = end$prev
+  }
+  return(end$nr)
 }
 
+pathcosts=function(curr, left, ends, distfun, roads){
+  if (length(left)==1){
+    left[[1]]$prev = curr
+    left[[1]]$dist = curr$dist + mDist2(curr$end, left[[1]]$start, roads)
+    ends[[length(ends)+1]] = left[[1]]
+    return (ends)
+  }
+  else{
+    ends = ends
+    for (i in seq(1, length(left))){
+      lleft = left
+      prev = curr
+      curr = lleft[[i]]
+      curr$prev = prev
+      curr$dist = prev$dist + distfun(prev$end, curr$start, roads)
+      lleft[[i]] = NULL
+      ends = pathcosts(curr, lleft, ends, mDist2, roads)
+    }
+    return (ends)
+  }
+}
+  
 astar=function(orig, dest, roads){
+  if (orig$x == dest$x && orig$y == dest$y){
+    return (5)
+  }
   visited = list()
   frontier = list()
   current = list(x = orig$x, y = orig$y, h = 0, accCost = 0, cameFrom = NULL, dirTo = NULL)
@@ -43,14 +82,44 @@ astar=function(orig, dest, roads){
     visited[[length(visited)+1]] = current
     frontier[[minIndex]] = NULL
     frontier = addFrontier(current, frontier, roads, dest)
-    print(length(frontier))
   }
   current=visited[[length(visited)]]
   cost = current$accCost
   while(!is.null(current$cameFrom$cameFrom)){
     current = current$cameFrom
   }
-  return (list(dir = current$dirTo, cost = cost))
+  return (current$dirTo)
+}
+
+astardist=function(orig, dest, roads){
+  if (orig$x == dest$x && orig$y == dest$y){
+    return (0)
+  }
+  visited = list()
+  frontier = list()
+  current = list(x = orig$x, y = orig$y, h = 0, accCost = 0, cameFrom = NULL, dirTo = NULL)
+  frontier = lappend(frontier, current)
+  while(indexOf(visited, dest)==-1){
+    min = 10000
+    minIndex = 0
+    for(i in seq_len(length(frontier))){
+      cost = frontier[[i]]$h + frontier[[i]]$accCost
+      if (cost < min){
+        min = cost
+        minIndex = i
+      }
+    }
+    current = frontier[[minIndex]]
+    visited[[length(visited)+1]] = current
+    frontier[[minIndex]] = NULL
+    frontier = addFrontier(current, frontier, roads, dest)
+  }
+  current=visited[[length(visited)]]
+  cost = current$accCost
+  while(!is.null(current$cameFrom$cameFrom)){
+    current = current$cameFrom
+  }
+  return (cost)
 }
 
 addFrontier=function(current, frontier, roads, dest){
@@ -124,7 +193,9 @@ indexOf=function(list, node){
     return (-1)
   }
   for(index in 1:length(list)){
-    if ((list[[index]]$x == node$x) && (list[[index]]$y == node$y)){
+    tmp = (list[[index]]$x == node$x)
+    tmp2 = list[[index]]$y == node$y
+    if (tmp && tmp2){
       return (index)
     }
   }
@@ -133,4 +204,8 @@ indexOf=function(list, node){
 #returns the manhattan distance between 2 points
 mDist=function(orig, dest){
   return (abs (dest$x - orig$x) + abs(dest$y - orig$y))
+}
+
+mDist2=function(orig, dest, roads){
+  return(mDist(orig, dest))
 }
