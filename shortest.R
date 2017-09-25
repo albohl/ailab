@@ -81,7 +81,7 @@ astar=function(orig, dest, roads){
     current = frontier[[minIndex]]
     visited[[length(visited)+1]] = current
     frontier[[minIndex]] = NULL
-    frontier = addFrontier(current, frontier, roads, dest)
+    frontier = addFrontier(current, frontier, visited, roads, dest)
   }
   current=visited[[length(visited)]]
   cost = current$accCost
@@ -112,7 +112,7 @@ astardist=function(orig, dest, roads){
     current = frontier[[minIndex]]
     visited[[length(visited)+1]] = current
     frontier[[minIndex]] = NULL
-    frontier = addFrontier(current, frontier, roads, dest)
+    frontier = addFrontier(current, frontier, visited, roads, dest)
   }
   current=visited[[length(visited)]]
   cost = current$accCost
@@ -122,18 +122,19 @@ astardist=function(orig, dest, roads){
   return (cost)
 }
 
-addFrontier=function(current, frontier, roads, dest){
+addFrontier=function(current, frontier, visited, roads, dest){
   if(current$x>1){
     coords = list(x = current$x - 1, y = current$y)
     heu = mDist(dest, coords)
     accumulatedCost = current$accCost + roads$hroads[current$y, current$x-1]
     toAdd = list(x = coords$x, y = coords$y, h = heu, accCost = accumulatedCost, cameFrom = current, dirTo = 4)
     index=indexOf(frontier, toAdd)
+    index2=indexOf(visited, toAdd)
     if (index!=-1){
       if(frontier[[index]]$accCost > toAdd$accCost){
         frontier[[index]] = toAdd
       }
-    } else {
+    } else if (index2==-1){
       frontier = lappend(frontier, toAdd)
     }
   }
@@ -143,11 +144,12 @@ addFrontier=function(current, frontier, roads, dest){
     accumulatedCost = current$accCost + roads$hroads[current$y, current$x]
     toAdd = list(x = coords$x, y = coords$y, h = heu, accCost = accumulatedCost, cameFrom = current, dirTo = 6)
     index=indexOf(frontier, toAdd)
+    index2=indexOf(visited, toAdd)
     if (index!=-1){
       if(frontier[[index]]$accCost > toAdd$accCost){
         frontier[[index]] = toAdd
       }
-    } else {
+    } else if (index2==-1){
       frontier = lappend(frontier, toAdd)
     }
   }
@@ -157,11 +159,12 @@ addFrontier=function(current, frontier, roads, dest){
     accumulatedCost = current$accCost + roads$vroads[current$y-1, current$x]
     toAdd = list(x = coords$x, y = coords$y, h = heu, accCost = accumulatedCost, cameFrom = current, dirTo = 2)
     index=indexOf(frontier, toAdd)
+    index2=indexOf(visited, toAdd)
     if (index!=-1){
       if(frontier[[index]]$accCost > toAdd$accCost){
         frontier[[index]] = toAdd
       }
-    } else {
+    } else if (index2==-1){
       frontier = lappend(frontier, toAdd)
     }
   }
@@ -171,7 +174,8 @@ addFrontier=function(current, frontier, roads, dest){
     accumulatedCost = current$accCost + roads$vroads[current$y, current$x]
     toAdd = list(x = coords$x, y = coords$y, h = heu, accCost = accumulatedCost, cameFrom = current, dirTo = 8)
     index=indexOf(frontier, toAdd)
-    if (index!=-1){
+    index2=indexOf(visited, toAdd)
+    if (index!=-1 && index2==-1){
       if(frontier[[index]]$accCost > toAdd$accCost){
         frontier[[index]] = toAdd
       }
