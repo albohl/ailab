@@ -6,18 +6,31 @@ bestWC=function(moveInfo,readings,positions,edges,probs) {
   return(moveInfo)
 }
 
-getState=function(){
+getState=function(moveInfo){
+  #first round
+  if(length(moveInfo$mem) == 0){
+    moveInfo$mem = list(Tmat = getTmat(edges), lastState = matrix(1/40, nrow = 1, ncol = 40))
+  }
 }
 
 search=function(currentPosition, crocAt){
   #calculate best path, return a direction to go
   #probably dijsktra, since we have no heuristic for Astar
+  #or greedy hill climb or something
 }
 
-getTmat=function(){
+getTmat=function(edges){
   #should return a 40x40 matrix with equal probability for each possible transition
-  #so if the croc is in 40 and can go to 39 and 38, then Tmat[40,39] and Tmat[40,38] should both be 1/2 (Tmat[39,40] and Tmat[38, 40], not sure)
+  #so if the croc is in 40 and can go to 39 and 38, then Tmat[40,39] and Tmat[40,38] and Tmat[40,40] should all be 1/3 (it can stay)
   #could use getOptions from WheresCroc.R
+  Tmat = matrix(0, nrow = 40, ncol = 40)
+  for (i in seq_len(40)){
+    bla = getOptions(i, edges)
+    for (j in bla){
+      Tmat[i,j] = 1/length(bla)
+    }
+  }
+  return (Tmat)
 }
 
 getProbs=function(){
