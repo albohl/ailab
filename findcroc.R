@@ -6,11 +6,20 @@ bestWC=function(moveInfo,readings,positions,edges,probs) {
   return(moveInfo)
 }
 
-getState=function(moveInfo){
+getState=function(moveInfo, positions){
   #first round
   if(length(moveInfo$mem) == 0){
     moveInfo$mem = list(Tmat = getTmat(edges), lastState = matrix(1/40, nrow = 1, ncol = 40))
   }
+  for (i in seq_len(2)){
+    if (!is.na(positions[i]) && positions[i] < 0){
+      state = matrix(0, nrow = 1, ncol = 40)
+      state[-positions[i]] = 1
+      return (state)
+    }
+  }
+  state = moveInfo$mem$lastState*moveInfo$mem$Tmat
+  
 }
 
 search=function(currentPosition, crocAt){
