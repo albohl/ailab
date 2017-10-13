@@ -43,6 +43,9 @@ getTmat=function(edges){
 }
 
 getProbs=function(){
+  prob= c(dnorm(readings,$));
   #use dnorm(reading, mean, stdev) for each positions salinity, phosphate and nitrogen
   #should return a vector of probabilities the croc is in each hole given the readings
+  
+  return (prob); 
 }
