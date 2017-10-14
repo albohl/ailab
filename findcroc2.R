@@ -1,7 +1,8 @@
 bestWC=function(moveInfo,readings,positions,edges,probs) {
   moveInfo$mem = getState(moveInfo,readings,positions,edges,probs)
-  crocAt = match(max(moveInfo$mem$lastState),moveInfo$mem$lastState) 
-  direction = search(positions[3], crocAt, edges)
+  crocAt = match(max(moveInfo$mem$lastState),moveInfo$mem$lastState)
+  searchresult = search(positions[3], crocAt, edges)
+  direction = searchresult$dir
   moveInfo$moves=c(direction, 0)
   return(moveInfo)
 }
@@ -9,7 +10,13 @@ bestWC=function(moveInfo,readings,positions,edges,probs) {
 getState=function(moveInfo,readings,positions,edges,probs){
   #first round
   if(length(moveInfo$mem) == 0){
-    moveInfo$mem = list(Tmat = getTmat(edges), lastState = matrix(1/40, nrow = 1, ncol = 40))
+    moveInfo$mem = list(Tmat = getTmat(edges), lastState = NULL)
+    state = matrix(1/40, nrow = 1, ncol = 40)
+    probbies = getProbs(readings, probs)
+    state = t(t(state) * probbies)
+    sumState = sum(state)
+    stateNormalized = state/sumState
+    moveInfo$mem$lastState = stateNormalized
     return (moveInfo$mem)
   }
   #backpacker died
@@ -44,10 +51,11 @@ search=function(currentPosition, crocAt, edges){
     visited[[length(visited)+1]] = current
   }
   end = visited[[length(visited)]]
+  length = end$cost
   while(!is.null(end$prev$prev)){
     end = end$prev
   }
-  return(end$pos)
+  return(list(dir = end$pos, dist = length))
 }
 
 best=function(frontier){
